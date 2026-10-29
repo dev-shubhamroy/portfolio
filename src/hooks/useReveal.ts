@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * Sets `data-visible` on the element once it scrolls into view. The change is
- * made directly on the DOM node, so no React re-render is involved. CSS in
- * globals.css (`.reveal-on-scroll`) handles the transition and reduced motion.
+ * Sets `data-visible` once the element has scrolled into view (for the reveal
+ * transition) and keeps `data-inview` in sync while it stays observed, so CSS
+ * can pause decorative animations whenever it is offscreen. Both are written
+ * straight to the DOM node, so no React re-render is involved.
  */
 export function useReveal<T extends HTMLElement>() {
   const ref = useRef<T>(null)
@@ -13,10 +14,8 @@ export function useReveal<T extends HTMLElement>() {
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          el.dataset.visible = 'true'
-          observer.disconnect()
-        }
+        el.dataset.inview = entry.isIntersecting ? 'true' : 'false'
+        if (entry.isIntersecting) el.dataset.visible = 'true'
       },
       { threshold: 0.15, rootMargin: '0px 0px -8% 0px' },
     )

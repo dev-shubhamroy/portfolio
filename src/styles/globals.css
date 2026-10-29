@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./transformation.css";
 
 @theme {
   --color-ink-950: #070912;
@@ -281,7 +282,7 @@ body {
 }
 
 /* don't animate illustrations that haven't scrolled into view yet */
-.reveal-on-scroll:not([data-visible='true']) :is(.flow, .node-pulse) {
+.reveal-on-scroll:not([data-inview='true']) :is(.flow, .node-pulse) {
   animation-play-state: paused;
 }
 
@@ -499,6 +500,26 @@ body {
   }
 }
 
+/* one move in a one-second slot of a shared 10s cycle: steps play in order */
+@keyframes travel-tenth {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  1.5% {
+    opacity: 1;
+  }
+  9% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  10%,
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
 /* one move in the first third of a 9s cycle, used for sequential emphasis */
 @keyframes travel-third {
   0% {
@@ -559,6 +580,11 @@ body {
   offset-distance: 0%;
   opacity: 0;
   animation: travel var(--dur, 4s) linear var(--delay, 0s) infinite;
+}
+.travel-ten {
+  offset-distance: 0%;
+  opacity: 0;
+  animation: travel-tenth 10s linear var(--delay, 0s) infinite;
 }
 .travel-seq {
   offset-distance: 0%;
@@ -726,10 +752,10 @@ body {
 }
 
 /* nothing decorative loops while its section is offscreen */
-.reveal-on-scroll:not([data-visible='true']) :is(.travel, .travel-seq, .seq, .scan, .blink) {
+.reveal-on-scroll:not([data-inview='true']) :is(.travel, .travel-ten, .travel-seq, .seq, .scan, .blink) {
   animation-play-state: paused;
 }
-.glow-frame.reveal-on-scroll:not([data-visible='true'])::before {
+.glow-frame.reveal-on-scroll:not([data-inview='true'])::before {
   animation-play-state: paused;
 }
 
@@ -751,6 +777,7 @@ body {
     opacity: 1;
   }
   .travel,
+  .travel-ten,
   .travel-seq {
     animation: none;
     opacity: 0;
@@ -776,5 +803,137 @@ body {
   .contact-pill:hover,
   .contact-pill:focus-visible {
     transform: none;
+  }
+}
+
+/* ---- Project universe: link overlays over the 3D satellites ---- */
+.universe-marker {
+  /* placed by the Three.js scene every frame via transform */
+  transform: translate3d(-100px, -100px, 0);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.universe-marker:not([data-ready='true']) {
+  visibility: hidden;
+  pointer-events: none;
+}
+.universe-marker[data-hidden='true'] {
+  opacity: 0.2;
+  pointer-events: none;
+}
+.universe-marker {
+  transition: opacity 0.4s;
+}
+
+.universe-ring {
+  position: absolute;
+  inset: 6px;
+  border-radius: 9999px;
+  border: 1px dashed rgb(var(--accent) / 0.45);
+  transition:
+    transform 0.3s var(--ease-out),
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.universe-marker:focus-visible .universe-ring,
+.universe-pill:focus-visible {
+  border-style: solid;
+}
+.universe-marker:focus-visible .universe-ring {
+  border-color: rgb(var(--accent) / 0.95);
+  box-shadow: 0 0 18px rgb(var(--accent) / 0.5);
+  transform: scale(1.12);
+}
+@media (hover: hover) {
+  .universe-marker:hover .universe-ring {
+    border-style: solid;
+    border-color: rgb(var(--accent) / 0.95);
+    box-shadow: 0 0 18px rgb(var(--accent) / 0.5);
+    transform: scale(1.12);
+  }
+}
+
+/* name tag beside the satellite, opens toward the globe's centre */
+.universe-tag {
+  position: absolute;
+  top: 50%;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgb(var(--accent) / 0.45);
+  border-radius: 9999px;
+  background: rgb(10 16 32 / 0.85);
+  color: rgb(var(--accent) / 1);
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity 0.2s;
+}
+.universe-marker[data-side='right'] .universe-tag {
+  left: calc(100% - 4px);
+}
+.universe-marker[data-side='left'] .universe-tag {
+  right: calc(100% - 4px);
+}
+.universe-marker:focus-visible .universe-tag {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .universe-marker:hover .universe-tag {
+    opacity: 1;
+  }
+}
+
+.universe-pill {
+  transition:
+    border-color 0.25s,
+    background-color 0.25s,
+    box-shadow 0.25s;
+}
+.universe-pill[data-active='true'],
+.universe-pill:focus-visible {
+  border-color: rgb(var(--accent) / 0.7);
+  background-color: rgb(var(--accent) / 0.08);
+  box-shadow: 0 0 20px -6px rgb(var(--accent) / 0.6);
+}
+
+@keyframes preview-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.universe-preview {
+  animation: preview-in 0.25s var(--ease-out);
+}
+
+/* arriving from a satellite or pill: briefly light the target card */
+@keyframes target-glow {
+  0% {
+    box-shadow:
+      0 0 0 1px rgb(var(--accent) / 0.9),
+      0 0 70px rgb(var(--accent) / 0.45);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgb(var(--accent) / 0),
+      0 0 0 rgb(var(--accent) / 0);
+  }
+}
+.reveal-on-scroll:target .project-card {
+  animation: target-glow 2.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .universe-preview,
+  .reveal-on-scroll:target .project-card {
+    animation: none;
+  }
+  .universe-ring,
+  .universe-pill,
+  .universe-marker {
+    transition: none;
   }
 }

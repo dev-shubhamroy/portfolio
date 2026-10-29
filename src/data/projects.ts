@@ -5,6 +5,8 @@ export interface Project {
   name: string
   /** Short label for the project's current state, taken from its repository. */
   status: string
+  /** One-line summary for compact previews (hero satellites). */
+  blurb: string
   description: string
   features: string[]
   tech: string[]
@@ -23,6 +25,8 @@ export const projects: Project[] = [
     id: 'retailpulse-ai',
     name: 'RetailPulseAI',
     status: 'Hackathon MVP',
+    blurb:
+      'Local-first retail assistant: validated product recommendations, cited policy answers and manager-approved stock changes.',
     description:
       'A local-first retail assistant that turns shopping requests into validated product searches, answers store-policy questions with citations, and keeps stock changes behind manager approval. The LLM interprets and explains; deterministic backend code validates, ranks and writes.',
     features: [
@@ -41,6 +45,8 @@ export const projects: Project[] = [
     id: 'branchforge',
     name: 'BranchForge',
     status: 'Rust CLI, v0.1.0',
+    blurb:
+      'Rust CLI that gives each Git branch its own worktree and runs supervised background jobs inside them.',
     description:
       'A Rust command-line tool that gives every Git branch its own worktree in a predictable layout, so parallel tasks do not share one working copy. It can also run long-lived commands in those worktrees as supervised background jobs.',
     features: [
@@ -58,6 +64,8 @@ export const projects: Project[] = [
     id: 'url-shortener',
     name: 'URL Shortener',
     status: 'Backend project',
+    blurb:
+      'Node.js and Express backend that shortens URLs, with Redis caching in front of PostgreSQL.',
     description:
       'A Node.js and Express backend that turns long URLs into short links and redirects visitors to the original destination. PostgreSQL stores every link, and Redis caches lookups so repeat redirects skip the database.',
     features: [

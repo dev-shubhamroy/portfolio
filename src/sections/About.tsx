@@ -116,9 +116,7 @@ export default function About() {
             <span aria-hidden className="absolute -bottom-2 -left-2 size-5 border-b border-l border-violet/60" />
             <span aria-hidden className="absolute -right-2 -bottom-2 size-5 border-r border-b border-violet/60" />
             <div className="rounded-2xl border border-white/10 bg-ink-900/50 p-5 backdrop-blur-sm">
-              <div className="aspect-[360/260]">
-                <TransitionDiagram />
-              </div>
+              <TransitionDiagram />
               <p className="mt-2 text-center text-[0.6rem] tracking-wider text-slate-500 uppercase">
                 Concept illustration
               </p>

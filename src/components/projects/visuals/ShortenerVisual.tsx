@@ -1,61 +1,78 @@
-const label = { fontSize: 9, fill: 'rgb(148 163 184)', fontFamily: 'ui-monospace, monospace' }
+import { Mono, Pulse } from '../../diagram/primitives'
+import { palette, toneColor, type Tone } from '../../diagram/tokens'
 
-const HIT_IN = 'M82 92 C106 92 108 48 132 48'
-const HIT_OUT = 'M204 48 C228 48 226 92 248 92'
-const MISS_IN = 'M82 108 C106 108 108 152 132 152'
-const MISS_OUT = 'M204 152 C228 152 226 108 248 108'
+// Sequence diagram of the redirect handler in server.js: Redis is checked
+// first, PostgreSQL is the fallback, and the result is cached for an hour.
+const LIFELINES = [
+  { x: 44, label: 'Client' },
+  { x: 138, label: 'Express' },
+  { x: 232, label: 'Redis' },
+  { x: 318, label: 'PostgreSQL' },
+]
+const X = { client: 44, express: 138, redis: 232, pg: 318 }
 
-const packet = (d: string, dur: number, delay: number, color: string) => (
-  <circle
-    key={`${d}-${delay}`}
-    r="2.4"
-    fill={color}
-    className="travel"
-    style={{ offsetPath: `path('${d}')`, '--dur': `${dur}s`, '--delay': `${delay}s` } as React.CSSProperties}
-  />
-)
+interface Step {
+  from: number
+  to: number
+  y: number
+  label: string
+  tone: Tone
+  dashed?: boolean
+}
 
-/** Decorative: request flow with a Redis cache hit and a PostgreSQL fallback. Not a screenshot. */
+const steps: Step[] = [
+  { from: X.client, to: X.express, y: 62, label: 'GET /:shortCode', tone: 'blue' },
+  { from: X.express, to: X.redis, y: 82, label: 'GET url:code', tone: 'blue' },
+  { from: X.redis, to: X.express, y: 102, label: 'miss', tone: 'violet', dashed: true },
+  { from: X.express, to: X.pg, y: 122, label: 'SELECT long_url', tone: 'violet' },
+  { from: X.pg, to: X.express, y: 142, label: 'row', tone: 'violet', dashed: true },
+  { from: X.express, to: X.redis, y: 162, label: 'SET EX 3600', tone: 'violet' },
+  { from: X.express, to: X.client, y: 182, label: '302 redirect', tone: 'blue' },
+]
+
+function Arrow({ from, to, y, label, tone, dashed }: Step) {
+  const dir = to > from ? 1 : -1
+  const color = toneColor[tone]
+  return (
+    <g>
+      <line x1={from} y1={y} x2={to - dir * 4} y2={y} stroke={color} strokeWidth="1.3" strokeDasharray={dashed ? '3 3' : undefined} opacity="0.85" />
+      <path d={`M${to} ${y} l${-dir * 6} -3.5 v7 z`} fill={color} />
+      <Mono x={(from + to) / 2} y={y - 4} size={8} anchor="middle" fill={palette.text}>
+        {label}
+      </Mono>
+    </g>
+  )
+}
+
+/** Decorative: request flow through Redis and PostgreSQL. Not a screenshot. */
 export default function ShortenerVisual() {
   return (
-    <svg viewBox="0 0 320 200" className="h-full w-full" fill="none" aria-hidden>
-      {/* client */}
-      <rect x="18" y="80" width="64" height="40" rx="10" fill="#0a1020" stroke="rgb(255 255 255 / 0.18)" />
-      <rect x="30" y="94" width="40" height="5" rx="2.5" fill="rgb(255 255 255 / 0.3)" />
-      <rect x="30" y="104" width="24" height="5" rx="2.5" fill="rgb(255 255 255 / 0.14)" />
-      <text x="34" y="138" {...label}>Client</text>
+    <svg viewBox="0 0 360 225" className="h-full w-full" fill="none" aria-hidden>
+      {LIFELINES.map((l) => (
+        <g key={l.label}>
+          <rect x={l.x - 30} y={12} width="60" height="20" rx="6" fill={palette.ink} stroke={palette.line} />
+          <Mono x={l.x} y={25} size={8.5} anchor="middle" fill={palette.text}>
+            {l.label}
+          </Mono>
+          <line x1={l.x} y1="32" x2={l.x} y2="196" stroke="rgb(255 255 255 / 0.1)" strokeDasharray="2 4" />
+        </g>
+      ))}
 
-      {/* Redis */}
-      <rect x="132" y="28" width="72" height="40" rx="10" fill="rgb(56 189 248 / 0.08)" stroke="#38bdf8" />
-      <text x="152" y="52" {...label} fill="#7dd3fc">Redis</text>
-      {/* PostgreSQL */}
-      <rect x="132" y="132" width="72" height="40" rx="10" fill="rgb(139 92 246 / 0.08)" stroke="#8b5cf6" />
-      <text x="140" y="156" {...label} fill="#c4b5fd">PostgreSQL</text>
+      {steps.map((s) => (
+        <Arrow key={s.y} {...s} />
+      ))}
 
-      {/* redirect */}
-      <rect x="248" y="80" width="56" height="40" rx="10" fill="#0a1020" stroke="rgb(255 255 255 / 0.18)" />
-      <path d="M262 100 H288 M281 94 L288 100 L281 106" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <text x="252" y="138" {...label}>Redirect</text>
+      {/* hit shortcut: Redis answers, PostgreSQL is skipped */}
+      <Mono x={240} y={95} size={7.5} fill={palette.blueSoft}>hit: skip to 302</Mono>
 
-      {/* cache hit path */}
-      <path className="flow" d={HIT_IN} stroke="#38bdf8" strokeWidth="1.4" />
-      <path className="flow" d={HIT_OUT} stroke="#38bdf8" strokeWidth="1.4" />
-      <text x="96" y="64" {...label} fill="#7dd3fc">hit</text>
-      {/* cache miss, fall back to the database */}
-      <path className="flow" d={MISS_IN} stroke="#8b5cf6" strokeWidth="1.4" opacity="0.8" />
-      <path className="flow" d={MISS_OUT} stroke="#8b5cf6" strokeWidth="1.4" opacity="0.8" />
-      <path className="flow" d="M168 132 V68" stroke="rgb(255 255 255 / 0.3)" strokeWidth="1" />
-      <text x="96" y="168" {...label} fill="#c4b5fd">miss</text>
+      {/* requests play through the steps in order, then a cache hit */}
+      {steps.map((s, i) => (
+        <Pulse key={s.y} d={`M${s.from} ${s.y} H${s.to}`} tone={s.tone} cycle="ten" delay={i} dur={10} />
+      ))}
+      <Pulse d={`M${X.redis} 102 H${X.express}`} tone="blue" cycle="ten" delay={7} dur={10} />
+      <Pulse d={`M${X.express} 182 H${X.client}`} tone="blue" cycle="ten" delay={8} dur={10} />
 
-      {/* requests: frequent cache hits, occasional database round trips */}
-      {packet(HIT_IN, 2.2, 0, '#7dd3fc')}
-      {packet(HIT_OUT, 2.2, 1.1, '#7dd3fc')}
-      {packet(HIT_IN, 2.2, 2.2, '#7dd3fc')}
-      {packet(HIT_OUT, 2.2, 3.3, '#7dd3fc')}
-      {packet(MISS_IN, 3.2, 1, '#c4b5fd')}
-      {packet(MISS_OUT, 3.2, 4.4, '#c4b5fd')}
-
-      <circle className="node-pulse" cx="168" cy="100" r="3" fill="#38bdf8" />
+      <Mono x={14} y={214} size={7.5}>create: POST /api/shorten → INSERT</Mono>
     </svg>
   )
 }

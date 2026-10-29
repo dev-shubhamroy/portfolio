@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import * as THREE from 'three'
 import { createLandMask } from './earthTexture'
 import { buildNetwork, mulberry32, PLANET_RADIUS } from './network'
+import { projects } from '../../data/projects'
+import ProjectSatellite from './satellites'
 import { atmosphereFragment, atmosphereVertex, earthFragment, earthVertex } from './shaders'
 
 interface Orbit {
@@ -15,11 +17,12 @@ interface Orbit {
   satellites: [number, number][]
 }
 
-// Rings at different tilts and distances; satellites share one slow, coordinated pace.
+// Rings at different tilts and distances. Each carries one project satellite
+// (ring i <-> projects[i]) moving at its own slow, calm pace.
 const ORBITS: Orbit[] = [
-  { radius: 1.5, rotation: [Math.PI / 2.3, 0.25, 0], color: '#38bdf8', opacity: 0.4, satellites: [[0.16, 0], [0.16, Math.PI]] },
-  { radius: 1.66, rotation: [Math.PI / 2.8, -0.5, 0], color: '#8b5cf6', opacity: 0.34, satellites: [[-0.11, 1.2]] },
-  { radius: 1.82, rotation: [Math.PI / 1.9, 0.9, 0.3], color: '#38bdf8', opacity: 0.18, satellites: [[0.08, 3.4]] },
+  { radius: 1.5, rotation: [Math.PI / 2.3, 0.25, 0], color: '#38bdf8', opacity: 0.4, satellites: [[0.085, 2.4]] },
+  { radius: 1.66, rotation: [Math.PI / 2.8, -0.5, 0], color: '#8b5cf6', opacity: 0.34, satellites: [[-0.065, 1.0]] },
+  { radius: 1.82, rotation: [Math.PI / 1.9, 0.9, 0.3], color: '#38bdf8', opacity: 0.22, satellites: [[0.05, 1.75]] },
 ]
 
 const NODE_HUBS = [0, 2, 5, 6] // nodes that pulse a little more, and emit a soft ping ring
@@ -34,10 +37,14 @@ interface Props {
   active: boolean
   animate: boolean
   lowPower: boolean
+  /** HTML link overlays that follow each project satellite (positioned here, per frame). */
+  markers: RefObject<(HTMLElement | null)[]>
+  /** id of the project currently hovered or focused in the page UI */
+  highlight: RefObject<string | null>
   onFail: () => void
 }
 
-export default function GlobeScene({ container, active, animate, lowPower, onFail }: Props) {
+export default function GlobeScene({ container, active, animate, lowPower, markers, highlight, onFail }: Props) {
   return (
     <Canvas
       // Slightly larger than the globe box so the atmosphere is never clipped;
@@ -56,7 +63,13 @@ export default function GlobeScene({ container, active, animate, lowPower, onFai
         })
       }}
     >
-      <GlobeContent container={container} animate={animate} lowPower={lowPower} />
+      <GlobeContent
+        container={container}
+        animate={animate}
+        lowPower={lowPower}
+        markers={markers}
+        highlight={highlight}
+      />
     </Canvas>
   )
 }
@@ -65,9 +78,14 @@ interface ContentProps {
   container: RefObject<HTMLDivElement | null>
   animate: boolean
   lowPower: boolean
+  markers: RefObject<(HTMLElement | null)[]>
+  highlight: RefObject<string | null>
 }
 
-function GlobeContent({ container, animate, lowPower }: ContentProps) {
+const worldPos = new THREE.Vector3()
+const ndcPos = new THREE.Vector3()
+
+function GlobeContent({ container, animate, lowPower, markers, highlight }: ContentProps) {
   const tilt = useRef<THREE.Group>(null)
   const spin = useRef<THREE.Group>(null)
   const dust = useRef<THREE.Group>(null)
@@ -131,6 +149,7 @@ function GlobeContent({ container, animate, lowPower }: ContentProps) {
       s.py = (e.clientY / window.innerHeight - 0.5) * 2
     }
     const onDown = (e: PointerEvent) => {
+      if ((e.target as Element).closest('[data-marker]')) return
       s.dragging = true
       s.lastX = e.clientX
       s.velocity = 0
@@ -164,6 +183,32 @@ function GlobeContent({ container, animate, lowPower }: ContentProps) {
   }, [container, animate])
 
   useFrame((state, delta) => {
+    // Keep each project's link overlay on top of its 3D satellite. This runs
+    // once for a static (reduced-motion) render too, and on every resize.
+    const box = container.current
+    if (box) {
+      const { width, height } = state.size
+      const offX = (width - box.clientWidth) / 2
+      const offY = (height - box.clientHeight) / 2
+      sats.current.forEach((sat, k) => {
+        const el = markers.current[k]
+        if (!sat || !el) return
+        sat.updateWorldMatrix(true, false)
+        sat.getWorldPosition(worldPos)
+        // behind the planet and inside its silhouette -> hidden from view
+        const hidden = worldPos.z < 0 && Math.hypot(worldPos.x, worldPos.y) < PLANET_RADIUS * 1.04
+        ndcPos.copy(worldPos).project(state.camera)
+        const x = (ndcPos.x * 0.5 + 0.5) * width - offX
+        const y = (-ndcPos.y * 0.5 + 0.5) * height - offY
+        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%)`
+        const side = x < box.clientWidth / 2 ? 'right' : 'left'
+        if (el.dataset.side !== side) el.dataset.side = side
+        const state_ = hidden ? 'true' : 'false'
+        if (el.dataset.hidden !== state_) el.dataset.hidden = state_
+        if (el.dataset.ready !== 'true') el.dataset.ready = 'true'
+      })
+    }
+
     if (!animate) return
     const s = input.current
     const dt = Math.min(delta, 0.05)
@@ -212,13 +257,14 @@ function GlobeContent({ container, animate, lowPower }: ContentProps) {
       ;(ring.material as THREE.MeshBasicMaterial).opacity = (1 - phase) * (1 - phase) * 0.55
     })
 
-    let n = 0
-    for (const orbit of ORBITS) {
-      for (const [speed, phase] of orbit.satellites) {
-        const sat = sats.current[n++]
-        if (sat) sat.position.set(Math.cos(t * speed + phase) * orbit.radius, Math.sin(t * speed + phase) * orbit.radius, 0)
-      }
-    }
+    ORBITS.forEach((orbit, oi) => {
+      const [speed, phase] = orbit.satellites[0]
+      sats.current[oi]?.position.set(
+        Math.cos(t * speed + phase) * orbit.radius,
+        Math.sin(t * speed + phase) * orbit.radius,
+        0,
+      )
+    })
   })
 
   return (
@@ -343,33 +389,22 @@ function GlobeContent({ container, animate, lowPower }: ContentProps) {
             <torusGeometry args={[orbit.radius, 0.0032, 6, 180]} />
             <meshBasicMaterial color={orbit.color} transparent opacity={orbit.opacity} />
           </mesh>
-          {orbit.satellites.map(([, phase], si) => {
-            const index = ORBITS.slice(0, oi).reduce((n, o) => n + o.satellites.length, 0) + si
-            return (
-              <group
-                key={si}
-                ref={(el) => {
-                  sats.current[index] = el
-                }}
-                position={[Math.cos(phase) * orbit.radius, Math.sin(phase) * orbit.radius, 0]}
-              >
-                <mesh>
-                  <sphereGeometry args={[0.024, 10, 10]} />
-                  <meshBasicMaterial color={orbit.color === '#8b5cf6' ? '#ddd6fe' : '#bae6fd'} />
-                </mesh>
-                <mesh>
-                  <sphereGeometry args={[0.07, 12, 12]} />
-                  <meshBasicMaterial
-                    color={orbit.color}
-                    transparent
-                    opacity={0.28}
-                    blending={THREE.AdditiveBlending}
-                    depthWrite={false}
-                  />
-                </mesh>
-              </group>
-            )
-          })}
+          {orbit.satellites.map(([, phase]) => (
+            <group
+              key={projects[oi].id}
+              ref={(el) => {
+                sats.current[oi] = el
+              }}
+              position={[Math.cos(phase) * orbit.radius, Math.sin(phase) * orbit.radius, 0]}
+            >
+              <ProjectSatellite
+                kind={projects[oi].visual}
+                id={projects[oi].id}
+                highlight={highlight}
+                animate={animate}
+              />
+            </group>
+          ))}
         </group>
       ))}
 

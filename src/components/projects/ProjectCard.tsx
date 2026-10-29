@@ -16,11 +16,19 @@ const visuals: Record<VisualKind, ComponentType> = {
 }
 
 // Presentation only: each project gets its own accent pair, and a small mono
-// caption on the illustration taken from that project's own README.
-const themes: Record<VisualKind, { accent: string; accent2: string; caption?: string }> = {
-  retail: { accent: '56 189 248', accent2: '139 92 246' },
-  branch: { accent: '34 211 238', accent2: '56 189 248', caption: '~/code/app.worktrees' },
-  shortener: { accent: '167 139 250', accent2: '56 189 248', caption: 'GET /:shortCode' },
+// description of its architecture illustration for screen readers.
+const themes: Record<VisualKind, { accent: string; accent2: string; alt: string }> = {
+  retail: {
+    accent: '56 189 248',
+    accent2: '139 92 246',
+    alt: 'Schematic of three separate flows: recommendations (request, LLM criteria, backend filtering and ranking, products), policy Q&A (question, embedding, pgvector search, cited answer), and stock changes (staff proposal, manager approval, transaction with audit log).',
+  },
+  branch: { accent: '34 211 238',
+    accent2: '56 189 248',     alt: 'Schematic of a repository with one worktree per branch, and a supervisor that holds a lock and moves a job through starting, running, then succeeded, failed or stopped.',
+  },
+  shortener: { accent: '167 139 250',
+    accent2: '56 189 248',     alt: 'Sequence diagram: client requests a short code, Express checks Redis, on a miss queries PostgreSQL and caches the result for one hour, then redirects; a cache hit skips PostgreSQL.',
+  },
 }
 
 interface Props {
@@ -39,7 +47,8 @@ export default function ProjectCard({ project, index, total }: Props) {
   return (
     <li
       ref={reveal}
-      className={cn('reveal-on-scroll', project.featured && 'lg:col-span-2')}
+      id={project.id}
+      className={cn('reveal-on-scroll scroll-mt-7', project.featured && 'lg:col-span-2')}
       style={{ '--i': index } as React.CSSProperties}
     >
       <article
@@ -49,7 +58,7 @@ export default function ProjectCard({ project, index, total }: Props) {
         className={cn(
           'project-card group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-ink-900/40 p-6 backdrop-blur-sm sm:p-8',
           project.featured
-            ? 'grid gap-8 md:grid-cols-[1.15fr_0.85fr] md:items-center'
+            ? 'grid gap-8 md:grid-cols-[1fr_1.1fr] md:items-center'
             : 'flex flex-col',
         )}
       >
@@ -130,14 +139,7 @@ export default function ProjectCard({ project, index, total }: Props) {
             className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgb(var(--accent)/0.16),transparent_60%),radial-gradient(ellipse_at_80%_90%,rgb(var(--accent-2)/0.16),transparent_55%)]"
           />
           <Visual />
-          {theme.caption && (
-            <span
-              aria-hidden
-              className="absolute top-2.5 left-3 font-mono text-[0.6rem] tracking-wide text-slate-500"
-            >
-              {theme.caption}
-            </span>
-          )}
+          <span className="sr-only">{theme.alt}</span>
           <figcaption className="absolute right-3 bottom-2 text-[0.6rem] tracking-wider text-slate-500 uppercase">
             Concept illustration
           </figcaption>

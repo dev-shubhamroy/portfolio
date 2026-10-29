@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, useRef, useState, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { useInView } from '../../hooks/useInView'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import GlobePlaceholder from '../GlobePlaceholder'
@@ -34,7 +34,14 @@ class SceneBoundary extends Component<
 }
 
 /** Interactive 3D Earth. Falls back to the CSS placeholder if WebGL is unavailable or fails. */
-export default function Globe() {
+interface Props {
+  /** link overlays positioned over the 3D project satellites */
+  markers: RefObject<(HTMLElement | null)[]>
+  /** project id highlighted from the surrounding UI */
+  highlight: RefObject<string | null>
+}
+
+export default function Globe({ markers, highlight }: Props) {
   const [supported] = useState(hasWebGL)
   const [failed, setFailed] = useState(false)
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
@@ -60,6 +67,8 @@ export default function Globe() {
             active={inView}
             animate={!reducedMotion}
             lowPower={lowPower}
+            markers={markers}
+            highlight={highlight}
             onFail={() => setFailed(true)}
           />
         </Suspense>

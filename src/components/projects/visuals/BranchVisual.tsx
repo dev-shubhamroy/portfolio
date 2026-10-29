@@ -1,60 +1,56 @@
-const FEATURE = 'M80 100 C110 100 110 52 140 52 H210 C240 52 240 100 268 100'
-const JOB = 'M120 100 C150 100 150 148 180 148 H240'
-const MAIN = 'M20 100 H300'
+import { FlowLine, Mono, NodeBox, Pulse } from '../../diagram/primitives'
+import { palette } from '../../diagram/tokens'
 
-const mono = { fontSize: 9, fill: 'rgb(148 163 184)', fontFamily: 'ui-monospace, monospace' }
+// Schematic of BranchForge: one repository, one worktree per branch (layout
+// names come from its README), and a supervised job whose states follow the
+// README's lifecycle table. Nothing here reflects a real repository.
+const TRUNK_X = 34
+const WORKTREES = [
+  { y: 52, name: 'feature/login' },
+  { y: 108, name: 'hotfix' },
+  { y: 164, name: 'existing-branch' },
+]
+const branchPath = (cy: number) => `M${TRUNK_X} ${cy} C${TRUNK_X + 28} ${cy} ${TRUNK_X + 22} ${cy} 92 ${cy}`
 
-const dot = (d: string, dur: number, delay: number, color: string) => (
-  <circle
-    key={`${d}-${delay}`}
-    r="2.4"
-    fill={color}
-    className="travel"
-    style={{ offsetPath: `path('${d}')`, '--dur': `${dur}s`, '--delay': `${delay}s` } as React.CSSProperties}
-  />
-)
-
-/** Decorative: a branching worktree graph with a supervised job marker. Not a screenshot. */
+/** Decorative: git worktrees plus a supervised job lifecycle. Not a screenshot. */
 export default function BranchVisual() {
+  const toSupervisor = 'M196 66 C212 66 206 52 224 52'
   return (
-    <svg viewBox="0 0 320 200" className="h-full w-full" fill="none" aria-hidden>
-      {/* faint ruled lines, terminal-like */}
-      {[40, 70, 130, 160, 190].map((y) => (
-        <line key={y} x1="14" y1={y} x2="306" y2={y} stroke="rgb(255 255 255 / 0.035)" />
+    <svg viewBox="0 0 360 225" className="h-full w-full" fill="none" aria-hidden>
+      {/* repository trunk */}
+      <line x1={TRUNK_X} y1="30" x2={TRUNK_X} y2="196" stroke={palette.line} strokeWidth="1.5" />
+      {[30, 80, 136, 192].map((y) => (
+        <circle key={y} cx={TRUNK_X} cy={y} r="4.5" fill={palette.inkDeep} stroke="rgb(255 255 255 / 0.55)" strokeWidth="1.5" />
+      ))}
+      <Mono x={14} y={216} size={7.5}>repo</Mono>
+
+      <Mono x={92} y={36} size={7.5}>app.worktrees/</Mono>
+      {WORKTREES.map((w, i) => (
+        <g key={w.name}>
+          <FlowLine d={branchPath(w.y + 14)} tone="cyan" />
+          <NodeBox x={92} y={w.y} w={104} h={28} label={w.name} tone={i === 0 ? 'cyan' : 'neutral'} fontSize={8.5} />
+          <Pulse d={branchPath(w.y + 14)} tone="cyan" dur={4.5} delay={i * 1.2} />
+        </g>
       ))}
 
-      {/* main line */}
-      <line x1="20" y1="100" x2="300" y2="100" stroke="rgb(255 255 255 / 0.18)" strokeWidth="1.5" />
-      {/* branches */}
-      <path d={FEATURE} stroke="#22d3ee" strokeWidth="1.5" opacity="0.45" />
-      <path className="flow" d={FEATURE} stroke="#22d3ee" strokeWidth="1.5" />
-      <path d={JOB} stroke="#38bdf8" strokeWidth="1.5" opacity="0.45" />
-      <path className="flow" d={JOB} stroke="#38bdf8" strokeWidth="1.5" />
+      {/* run -> supervisor */}
+      <FlowLine d={toSupervisor} tone="blue" />
+      <Mono x={199} y={61} size={7}>run</Mono>
+      <NodeBox x={224} y={36} w={122} h={32} label="supervisor" sub="holds flock" tone="blue" fontSize={9} />
+      <Pulse d={toSupervisor} tone="blue" dur={3.2} delay={0.6} />
 
-      {/* commits flowing along the lines */}
-      {dot(MAIN, 7, 0, '#e2e8f0')}
-      {dot(FEATURE, 5, 1, '#67e8f9')}
-      {dot(FEATURE, 5, 3.5, '#67e8f9')}
-      {dot(JOB, 4.5, 0.5, '#7dd3fc')}
-
-      {/* commits on main */}
-      {[36, 80, 120, 200, 268].map((x) => (
-        <circle key={x} cx={x} cy="100" r="5" fill="#070912" stroke="rgb(255 255 255 / 0.5)" strokeWidth="1.5" />
-      ))}
-      {/* commits on branches */}
-      <circle cx="140" cy="52" r="4.5" fill="#070912" stroke="#22d3ee" strokeWidth="1.5" />
-      <circle cx="210" cy="52" r="4.5" fill="#070912" stroke="#22d3ee" strokeWidth="1.5" />
-      <circle cx="180" cy="148" r="4.5" fill="#070912" stroke="#38bdf8" strokeWidth="1.5" />
-
-      {/* a running job at the end of the lower branch */}
-      <circle className="node-pulse" cx="240" cy="148" r="9" fill="rgb(56 189 248 / 0.25)" />
-      <rect x="234" y="142" width="12" height="12" rx="3" fill="#38bdf8" />
-      <path d="M239 145.5 L243.5 148 L239 150.5 Z" fill="#070912" />
-
-      <text x="20" y="124" {...mono}>main</text>
-      <text x="140" y="40" {...mono}>worktree</text>
-      <text x="180" y="170" {...mono}>job</text>
-      <rect className="blink" x="203" y="162" width="5" height="9" fill="#67e8f9" opacity="0.8" />
+      {/* job states: starting -> running -> succeeded | failed | stopped */}
+      <Mono x={224} y={86} size={7.5}>JOB STATE</Mono>
+      <NodeBox x={224} y={92} w={56} h={20} label="starting" tone="neutral" seqDelay={0} fontSize={8} />
+      <NodeBox x={290} y={92} w={56} h={20} label="running" tone="blue" seqDelay={3} fontSize={8} />
+      <path d="M280 102 H290" stroke={palette.line} />
+      <path d="M318 112 V126" stroke={palette.line} />
+      <NodeBox x={224} y={126} w={62} h={20} label="succeeded" tone="cyan" seqDelay={6} fontSize={8} />
+      <NodeBox x={292} y={126} w={54} h={20} label="failed" tone="violet" fontSize={8} />
+      <NodeBox x={224} y={154} w={62} h={20} label="stopped" tone="neutral" fontSize={8} />
+      <path d="M318 126 H286 M318 126 H292 M318 126 V140 H255 V154" stroke={palette.faint} />
+      <Mono x={224} y={192} size={7}>running = lock held,</Mono>
+      <Mono x={224} y={202} size={7}>not a stored PID</Mono>
     </svg>
   )
 }

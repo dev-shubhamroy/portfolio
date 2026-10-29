@@ -1,9 +1,8 @@
 import { Fragment } from 'react'
 import { ArrowRight, Download, Mail } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '../components/BrandIcons'
-import FloatingLabels from '../components/FloatingLabels'
-import Globe from '../components/globe/Globe'
 import HeroBackdrop from '../components/HeroBackdrop'
+import ProjectUniverse from '../components/universe/ProjectUniverse'
 import IconLink from '../components/IconLink'
 import { profile } from '../data/profile'
 
@@ -95,11 +94,8 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Interactive 3D Earth (falls back to a CSS placeholder without WebGL) */}
-        <div className="relative mx-auto w-full max-w-[34rem]">
-          <Globe />
-          <FloatingLabels />
-        </div>
+        {/* Interactive 3D Earth with project satellites (falls back without WebGL) */}
+        <ProjectUniverse />
       </div>
 
       <a
