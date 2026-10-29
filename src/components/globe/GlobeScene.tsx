@@ -22,7 +22,7 @@ const ORBITS: Orbit[] = [
   { radius: 1.82, rotation: [Math.PI / 1.9, 0.9, 0.3], color: '#38bdf8', opacity: 0.18, satellites: [[0.08, 3.4]] },
 ]
 
-const NODE_HUBS = new Set([0, 2, 5, 6]) // nodes that pulse a little more
+const NODE_HUBS = [0, 2, 5, 6] // nodes that pulse a little more, and emit a soft ping ring
 
 const AUTO_SPEED = 0.035 // rad/s, roughly one turn every three minutes
 const BASE_TILT = 0.38
@@ -74,11 +74,22 @@ function GlobeContent({ container, animate, lowPower }: ContentProps) {
   const pulses = useRef<(THREE.Group | null)[]>([])
   const halos = useRef<(THREE.Mesh | null)[]>([])
   const sats = useRef<(THREE.Group | null)[]>([])
+  const pings = useRef<(THREE.Mesh | null)[]>([])
   const earthMat = useRef<THREE.ShaderMaterial>(null)
   // Mutable input state; read inside useFrame so no React re-renders happen.
   const input = useRef({ px: 0, py: 0, dragging: false, lastX: 0, pending: 0, velocity: 0 })
 
   const network = useMemo(() => buildNetwork(lowPower ? 32 : 48), [lowPower])
+  const hubQuaternions = useMemo(
+    () =>
+      NODE_HUBS.map((i) =>
+        new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 0, 1),
+          network.nodes[i].clone().normalize(),
+        ),
+      ),
+    [network],
+  )
   const mask = useMemo(() => createLandMask(lowPower ? 1024 : 2048), [lowPower])
   const earthUniforms = useMemo(
     () => ({
@@ -189,8 +200,16 @@ function GlobeContent({ container, animate, lowPower }: ContentProps) {
 
     halos.current.forEach((halo, i) => {
       if (!halo) return
-      const amp = NODE_HUBS.has(i) ? 0.35 : 0.12
+      const amp = NODE_HUBS.includes(i) ? 0.35 : 0.12
       halo.scale.setScalar(1 + amp * Math.sin(t * 1.1 + i * 1.3))
+    })
+
+    // soft ping rings spreading across the surface from the hub nodes
+    pings.current.forEach((ring, k) => {
+      if (!ring) return
+      const phase = (t * 0.22 + k * 0.27) % 1
+      ring.scale.setScalar(0.4 + phase * 3.2)
+      ;(ring.material as THREE.MeshBasicMaterial).opacity = (1 - phase) * (1 - phase) * 0.55
     })
 
     let n = 0
@@ -241,6 +260,25 @@ function GlobeContent({ container, animate, lowPower }: ContentProps) {
                 color="#38bdf8"
                 transparent
                 opacity={0.18}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+          </group>
+        ))}
+
+        {NODE_HUBS.map((nodeIndex, k) => (
+          <group key={nodeIndex} position={network.nodes[nodeIndex]} quaternion={hubQuaternions[k]}>
+            <mesh
+              ref={(el) => {
+                pings.current[k] = el
+              }}
+            >
+              <ringGeometry args={[0.028, 0.034, 40]} />
+              <meshBasicMaterial
+                color="#67e8f9"
+                transparent
+                opacity={0}
                 blending={THREE.AdditiveBlending}
                 depthWrite={false}
               />

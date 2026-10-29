@@ -18,13 +18,21 @@ const socials = [
 export default function Footer() {
   return (
     <footer className="relative border-t border-white/10">
-      <div
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-electric/60 to-transparent"
-      />
+      <div aria-hidden className="absolute inset-x-0 top-0 h-px overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+        <div className="footer-light absolute top-0 h-px w-56 bg-gradient-to-r from-transparent via-cyan-glow to-transparent" />
+      </div>
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-10 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="font-semibold tracking-tight">{profile.name}</p>
+          <p className="flex items-center gap-2.5 font-semibold tracking-tight">
+            <span
+              aria-hidden
+              className="grid size-6 place-items-center rounded-md bg-gradient-to-br from-electric to-violet text-[0.55rem] font-bold text-ink-950"
+            >
+              SR
+            </span>
+            {profile.name}
+          </p>
           <p className="mt-1 text-sm text-slate-500">
             © {currentYear} · Built with React, TypeScript and Three.js
           </p>
@@ -53,7 +61,7 @@ export default function Footer() {
                   href={s.href}
                   aria-label={s.external ? `${s.label} (opens in a new tab)` : s.label}
                   {...(s.external && { target: '_blank', rel: 'noopener noreferrer' })}
-                  className={`inline-flex size-11 items-center justify-center rounded-full border border-white/10 text-slate-400 transition-colors hover:border-electric/60 hover:text-white ${focusRing}`}
+                  className={`inline-flex size-11 items-center justify-center rounded-full border border-white/10 text-slate-400 transition-colors hover:border-electric/60 hover:text-white contact-pill ${focusRing}`}
                 >
                   {s.icon}
                 </a>

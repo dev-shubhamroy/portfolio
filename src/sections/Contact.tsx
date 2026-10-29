@@ -1,5 +1,6 @@
 import { Mail, MessageCircle, Phone } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '../components/BrandIcons'
+import SectionLabel from '../components/SectionLabel'
 import CopyEmailButton from '../components/contact/CopyEmailButton'
 import { profile } from '../data/profile'
 import { useReveal } from '../hooks/useReveal'
@@ -14,9 +15,19 @@ export default function Contact() {
 
   return (
     <section id="contact" aria-labelledby="contact-title" className="relative px-5 py-24 lg:py-32">
+      <div className="relative mx-auto max-w-4xl">
+      {/* atmospheric light around the panel (plain gradients, no blur filters) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-x-[18%] -inset-y-[30%]"
+        style={{
+          background:
+            'radial-gradient(ellipse 50% 50% at 50% 45%, rgb(99 102 241 / 0.22), transparent 70%), radial-gradient(ellipse 35% 35% at 20% 80%, rgb(56 189 248 / 0.14), transparent 70%)',
+        }}
+      />
       <div
         ref={panel}
-        className="reveal-on-scroll relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-14 text-center backdrop-blur-sm sm:px-12 sm:py-20"
+        className="glow-frame reveal-on-scroll relative overflow-hidden rounded-[2rem] border border-white/5 bg-ink-900/55 px-6 py-14 text-center backdrop-blur-md sm:px-12 sm:py-20"
       >
         {/* decorative glow and rings */}
         <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -27,7 +38,9 @@ export default function Contact() {
         </div>
 
         <div className="relative">
-          <p className="text-xs tracking-[0.25em] text-electric uppercase">Contact</p>
+          <div className="flex justify-center">
+            <SectionLabel index="03">Contact</SectionLabel>
+          </div>
           <h2 id="contact-title" className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">
             Let's{' '}
             <span className="bg-gradient-to-r from-electric via-violet to-cyan-glow bg-clip-text text-transparent">
@@ -43,7 +56,7 @@ export default function Contact() {
           <div className="mt-9 flex flex-col items-center gap-3">
             <a
               href={mailto}
-              className={`inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-r from-electric to-violet px-7 py-3 text-sm font-semibold text-ink-950 transition hover:brightness-110 ${focusRing}`}
+              className={`btn-sheen inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-r from-electric to-violet px-7 py-3 text-sm font-semibold text-ink-950 shadow-[0_10px_40px_-10px_rgb(56_189_248/0.6)] transition hover:brightness-110 ${focusRing}`}
             >
               <Mail size={17} />
               Email me
@@ -58,7 +71,7 @@ export default function Contact() {
             <li>
               <a
                 href={profile.phone.href}
-                className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition-colors hover:border-electric/60 hover:text-white ${focusRing}`}
+                className={`contact-pill inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 hover:border-electric/60 hover:text-white ${focusRing}`}
               >
                 <Phone size={16} />
                 <span className="sr-only">Call </span>
@@ -70,7 +83,7 @@ export default function Contact() {
                 href={profile.whatsapp.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition-colors hover:border-electric/60 hover:text-white ${focusRing}`}
+                className={`contact-pill inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 hover:border-electric/60 hover:text-white ${focusRing}`}
               >
                 <MessageCircle size={16} />
                 WhatsApp
@@ -82,7 +95,7 @@ export default function Contact() {
                 href={github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition-colors hover:border-electric/60 hover:text-white ${focusRing}`}
+                className={`contact-pill inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 hover:border-electric/60 hover:text-white ${focusRing}`}
               >
                 <GithubIcon size={16} />
                 GitHub
@@ -94,7 +107,7 @@ export default function Contact() {
                 href={linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition-colors hover:border-electric/60 hover:text-white ${focusRing}`}
+                className={`contact-pill inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm text-slate-300 hover:border-electric/60 hover:text-white ${focusRing}`}
               >
                 <LinkedinIcon size={16} />
                 LinkedIn
@@ -103,6 +116,7 @@ export default function Contact() {
             </li>
           </ul>
         </div>
+      </div>
       </div>
     </section>
   )

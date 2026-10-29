@@ -15,15 +15,25 @@ const visuals: Record<VisualKind, ComponentType> = {
   shortener: ShortenerVisual,
 }
 
+// Presentation only: each project gets its own accent pair, and a small mono
+// caption on the illustration taken from that project's own README.
+const themes: Record<VisualKind, { accent: string; accent2: string; caption?: string }> = {
+  retail: { accent: '56 189 248', accent2: '139 92 246' },
+  branch: { accent: '34 211 238', accent2: '56 189 248', caption: '~/code/app.worktrees' },
+  shortener: { accent: '167 139 250', accent2: '56 189 248', caption: 'GET /:shortCode' },
+}
+
 interface Props {
   project: Project
   index: number
+  total: number
 }
 
-export default function ProjectCard({ project, index }: Props) {
+export default function ProjectCard({ project, index, total }: Props) {
   const reveal = useReveal<HTMLLIElement>()
   const card = useCardEffects<HTMLElement>()
   const Visual = visuals[project.visual]
+  const theme = themes[project.visual]
   const titleId = `${project.id}-title`
 
   return (
@@ -35,17 +45,33 @@ export default function ProjectCard({ project, index }: Props) {
       <article
         ref={card}
         aria-labelledby={titleId}
+        style={{ '--accent': theme.accent, '--accent-2': theme.accent2 } as React.CSSProperties}
         className={cn(
-          'project-card group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm sm:p-8',
+          'project-card group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-ink-900/40 p-6 backdrop-blur-sm sm:p-8',
           project.featured
             ? 'grid gap-8 md:grid-cols-[1.15fr_0.85fr] md:items-center'
             : 'flex flex-col',
         )}
       >
+        <span
+          aria-hidden
+          className="accent-rule absolute inset-x-8 top-0 h-px opacity-70"
+        />
+        <span
+          aria-hidden
+          className="absolute top-5 right-6 z-10 font-mono text-xs tracking-widest text-slate-600"
+        >
+          {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+        </span>
+
         <div className={cn('relative z-10 flex flex-1 flex-col', project.featured && 'md:order-1')}>
-          <p className="inline-flex w-fit items-center gap-2 rounded-full border border-electric/25 bg-electric/[0.06] px-3 py-1 text-[0.7rem] tracking-wide text-electric">
-            {project.featured && <span className="text-violet">Featured</span>}
-            {project.featured && <span aria-hidden className="text-white/20">·</span>}
+          <p className="accent-chip inline-flex w-fit items-center gap-2 rounded-full px-3 py-1 text-[0.7rem] tracking-wide">
+            {project.featured && <span className="text-white/80">Featured</span>}
+            {project.featured && (
+              <span aria-hidden className="text-white/20">
+                ·
+              </span>
+            )}
             {project.status}
           </p>
           <h3 id={titleId} className="mt-4 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -58,7 +84,7 @@ export default function ProjectCard({ project, index }: Props) {
           <ul className="mt-5 space-y-2.5 text-sm leading-relaxed text-slate-400">
             {project.features.map((f) => (
               <li key={f} className="flex gap-3">
-                <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-gradient-to-r from-electric to-violet" />
+                <span aria-hidden className="accent-rule mt-2 size-1 shrink-0 rounded-full" />
                 <span>{f}</span>
               </li>
             ))}
@@ -84,7 +110,7 @@ export default function ProjectCard({ project, index }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${project.name} on GitHub (opens in a new tab)`}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2.5 text-sm font-semibold transition-colors hover:border-electric/60 hover:bg-electric/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-electric"
+              className="btn-sheen inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 py-2.5 text-sm font-semibold transition-colors hover:border-[rgb(var(--accent)/0.7)] hover:bg-[rgb(var(--accent)/0.1)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-electric"
             >
               <GithubIcon size={16} />
               View on GitHub
@@ -95,12 +121,23 @@ export default function ProjectCard({ project, index }: Props) {
 
         <figure
           className={cn(
-            'relative z-10 order-first mb-6 aspect-[16/10] overflow-hidden rounded-2xl border border-white/10 bg-ink-950/60',
+            'figure-sheen relative z-10 order-first mb-6 aspect-[16/10] overflow-hidden rounded-2xl border border-white/10 bg-ink-950/70',
             project.featured ? 'md:order-2 md:mb-0' : 'sm:mb-8',
           )}
         >
-          <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgb(56_189_248/0.12),transparent_60%),radial-gradient(ellipse_at_80%_90%,rgb(139_92_246/0.14),transparent_55%)]" />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgb(var(--accent)/0.16),transparent_60%),radial-gradient(ellipse_at_80%_90%,rgb(var(--accent-2)/0.16),transparent_55%)]"
+          />
           <Visual />
+          {theme.caption && (
+            <span
+              aria-hidden
+              className="absolute top-2.5 left-3 font-mono text-[0.6rem] tracking-wide text-slate-500"
+            >
+              {theme.caption}
+            </span>
+          )}
           <figcaption className="absolute right-3 bottom-2 text-[0.6rem] tracking-wider text-slate-500 uppercase">
             Concept illustration
           </figcaption>

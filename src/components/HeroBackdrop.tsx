@@ -1,17 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useMediaQuery } from '../hooks/useMediaQuery'
-import { mulberry32 } from '../utils/random'
-
-/** A fixed, seeded set of tiny stars expressed as stacked radial gradients. */
-function makeStars(count: number, seed: number, color: string, maxSize: number) {
-  const rand = mulberry32(seed)
-  return Array.from({ length: count }, () => {
-    const x = (rand() * 100).toFixed(1)
-    const y = (rand() * 100).toFixed(1)
-    const s = (1 + rand() * (maxSize - 1)).toFixed(1)
-    return `radial-gradient(${s}px ${s}px at ${x}% ${y}%, ${color}, transparent)`
-  }).join(',')
-}
+import { makeStars } from '../utils/stars'
 
 const starsNear = makeStars(26, 11, 'rgb(186 230 253 / 0.9)', 2)
 const starsFar = makeStars(40, 29, 'rgb(199 210 254 / 0.55)', 1.4)
@@ -46,9 +35,11 @@ export default function HeroBackdrop() {
   }, [reduced, finePointer])
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div className="bg-grid absolute inset-0" />
-
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+      style={{ maskImage: 'linear-gradient(to bottom, #000 72%, transparent)' }}
+    >
       {/* spotlight behind the Earth: below the text on mobile, right column on desktop */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_32%_at_50%_80%,rgb(99_102_241/0.22),rgb(56_189_248/0.08)_50%,transparent_75%)] lg:bg-[radial-gradient(ellipse_42%_62%_at_74%_50%,rgb(99_102_241/0.24),rgb(56_189_248/0.09)_45%,transparent_72%)]" />
       <div className="absolute -top-48 right-[-15%] size-[40rem] rounded-full bg-violet/10 blur-[150px]" />

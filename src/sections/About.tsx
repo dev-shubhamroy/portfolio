@@ -1,5 +1,6 @@
 import { Mail } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '../components/BrandIcons'
+import SectionLabel from '../components/SectionLabel'
 import TransitionDiagram from '../components/about/TransitionDiagram'
 import { aboutIntro, focusSentence, highlights, portfolioStack, projectSkills } from '../data/about'
 import { profile } from '../data/profile'
@@ -31,34 +32,60 @@ function Pill({ children, dashed }: { children: string; dashed?: boolean }) {
   )
 }
 
+function Row({ label, children, dashed }: { label: string; children: string[]; dashed?: boolean }) {
+  return (
+    <div className="grid gap-3 py-5 sm:grid-cols-[11rem_1fr] sm:items-baseline">
+      <dt className="font-mono text-xs tracking-wider text-slate-400 uppercase">{label}</dt>
+      <dd>
+        <ul className="flex flex-wrap gap-2">
+          {children.map((item) => (
+            <Pill key={item} dashed={dashed}>
+              {item}
+            </Pill>
+          ))}
+        </ul>
+      </dd>
+    </div>
+  )
+}
+
 export default function About() {
   const intro = useReveal<HTMLDivElement>()
   const diagram = useReveal<HTMLDivElement>()
+  const ledger = useReveal<HTMLUListElement>()
   const skills = useReveal<HTMLDivElement>()
 
   return (
     <section id="about" aria-labelledby="about-title" className="relative px-5 py-24 lg:py-32">
-      <div className="mx-auto max-w-6xl">
+      {/* section light: violet on the left, reading toward the diagram */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-10 -left-[20%] size-[44rem] rounded-full"
+        style={{ background: 'radial-gradient(circle, rgb(139 92 246 / 0.12), transparent 65%)' }}
+      />
+
+      <div className="relative mx-auto max-w-6xl">
         <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
           <div ref={intro} className="reveal-on-scroll">
-            <p className="text-xs tracking-[0.25em] text-electric uppercase">About me</p>
-            <h2 id="about-title" className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl">
+            <SectionLabel index="01">About me</SectionLabel>
+            <h2
+              id="about-title"
+              className="mt-5 text-4xl leading-[1.05] font-bold tracking-tight sm:text-6xl"
+            >
               From machines to{' '}
               <span className="bg-gradient-to-r from-electric to-violet bg-clip-text text-transparent">
                 software.
               </span>
             </h2>
-            <div className="mt-6 max-w-xl space-y-4 leading-relaxed text-slate-400">
-              {aboutIntro.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
+            <div className="mt-7 max-w-xl space-y-4 leading-relaxed text-slate-400">
+              <p className="text-lg text-slate-300">{aboutIntro[0]}</p>
+              <p>{aboutIntro[1]}</p>
               <p>
-                I'm focused on{' '}
-                <span className="text-slate-200">{focusSentence}</span>.
+                I'm focused on <span className="text-slate-200">{focusSentence}</span>.
               </p>
             </div>
 
-            <ul className="mt-7 flex flex-wrap gap-3">
+            <ul className="mt-8 flex flex-wrap gap-3">
               {contactLinks.map((l) => (
                 <li key={l.label}>
                   <a
@@ -67,10 +94,11 @@ export default function About() {
                       target: '_blank',
                       rel: 'noopener noreferrer',
                     })}
-                    className={`inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 transition-colors hover:border-electric/60 hover:text-white ${focusRing}`}
+                    className={`contact-pill inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 hover:border-electric/60 hover:text-white ${focusRing}`}
                   >
                     {l.icon}
                     {l.label}
+                    {l.label !== 'Email' && <span className="sr-only"> (opens in a new tab)</span>}
                   </a>
                 </li>
               ))}
@@ -79,97 +107,77 @@ export default function About() {
 
           <div
             ref={diagram}
-            className="reveal-on-scroll mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.02] p-5"
+            className="reveal-on-scroll relative mx-auto w-full max-w-md"
             style={{ '--i': 1 } as React.CSSProperties}
           >
-            <div className="aspect-[360/260]">
-              <TransitionDiagram />
+            {/* corner brackets frame the diagram like a drawing sheet */}
+            <span aria-hidden className="absolute -top-2 -left-2 size-5 border-t border-l border-electric/60" />
+            <span aria-hidden className="absolute -top-2 -right-2 size-5 border-t border-r border-electric/60" />
+            <span aria-hidden className="absolute -bottom-2 -left-2 size-5 border-b border-l border-violet/60" />
+            <span aria-hidden className="absolute -right-2 -bottom-2 size-5 border-r border-b border-violet/60" />
+            <div className="rounded-2xl border border-white/10 bg-ink-900/50 p-5 backdrop-blur-sm">
+              <div className="aspect-[360/260]">
+                <TransitionDiagram />
+              </div>
+              <p className="mt-2 text-center text-[0.6rem] tracking-wider text-slate-500 uppercase">
+                Concept illustration
+              </p>
             </div>
-            <p className="mt-2 text-center text-[0.6rem] tracking-wider text-slate-500 uppercase">
-              Concept illustration
-            </p>
           </div>
         </div>
 
-        <ul className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {/* highlights as a ledger of ideas rather than three boxes */}
+        <ul
+          ref={ledger}
+          className="reveal-on-scroll mt-20 grid border-y border-white/10 md:grid-cols-3 md:divide-x md:divide-white/10"
+        >
           {highlights.map((h, i) => (
-            <HighlightCard key={h.label} index={i} {...h} />
+            <li
+              key={h.label}
+              className="group relative px-0 py-8 md:px-8 md:first:pl-0 md:last:pr-0"
+            >
+              <span
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-electric to-violet transition-transform duration-500 group-hover:scale-x-100 group-focus-within:scale-x-100 md:first:inset-x-0"
+              />
+              <p className="font-mono text-xs text-slate-600">{String(i + 1).padStart(2, '0')}</p>
+              <p className="mt-3 text-xs tracking-wider text-electric uppercase">{h.label}</p>
+              <h3 className="mt-2 text-xl font-semibold tracking-tight">{h.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{h.body}</p>
+              <a
+                href="#projects"
+                className={`mt-4 inline-flex min-h-8 items-center rounded text-xs text-slate-500 transition-colors hover:text-electric ${focusRing}`}
+              >
+                See {projectName(h.project)} →
+              </a>
+            </li>
           ))}
         </ul>
 
+        {/* toolkit as a spec sheet */}
         <div
           ref={skills}
-          className="reveal-on-scroll mt-16 rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm sm:p-8"
+          className="reveal-on-scroll mt-20 overflow-hidden rounded-3xl border border-white/10 bg-ink-900/40 px-6 py-3 backdrop-blur-sm sm:px-8"
         >
-          <h3 className="text-xl font-semibold tracking-tight">Technical toolkit</h3>
-          <p className="mt-2 text-sm text-slate-500">
-            Technologies used in the featured projects below, grouped by role, plus the stack of this portfolio.
-          </p>
-
-          <dl className="mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-            {projectSkills.map((g) => (
-              <div key={g.name}>
-                <dt className="text-xs tracking-wider text-slate-400 uppercase">{g.name}</dt>
-                <dd>
-                  <ul className="mt-2 flex flex-wrap gap-2">
-                    {g.items.map((item) => (
-                      <Pill key={item}>{item}</Pill>
-                    ))}
-                  </ul>
-                </dd>
-              </div>
-            ))}
-            <div>
-              <dt className="text-xs tracking-wider text-slate-400 uppercase">
-                Built this portfolio with
-              </dt>
-              <dd>
-                <ul className="mt-2 flex flex-wrap gap-2">
-                  {portfolioStack.map((item) => (
-                    <Pill key={item}>{item}</Pill>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          </dl>
-
-          <div className="mt-7 border-t border-white/10 pt-5">
-            <p className="text-xs tracking-wider text-slate-400 uppercase">Areas I'm growing into</p>
-            <ul className="mt-2 flex flex-wrap gap-2">
-              {profile.interests.map((item) => (
-                <Pill key={item} dashed>
-                  {item}
-                </Pill>
-              ))}
-            </ul>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 py-5">
+            <h3 className="text-xl font-semibold tracking-tight">Technical toolkit</h3>
+            <p className="text-sm text-slate-500">
+              Used in the featured projects below, plus this portfolio's own stack.
+            </p>
           </div>
+          <dl className="divide-y divide-white/10">
+            {projectSkills.map((g) => (
+              <Row key={g.name} label={g.name}>
+                {g.items}
+              </Row>
+            ))}
+            <Row label="This portfolio">{portfolioStack}</Row>
+            <Row label="Growing into" dashed>
+              {profile.interests}
+            </Row>
+          </dl>
         </div>
       </div>
     </section>
-  )
-}
-
-function HighlightCard({ label, title, body, project, index }: (typeof highlights)[number] & { index: number }) {
-  const ref = useReveal<HTMLLIElement>()
-  return (
-    <li
-      ref={ref}
-      className="reveal-on-scroll group rounded-3xl last:md:col-span-2 last:lg:col-span-1 border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm transition-colors hover:border-electric/30 focus-within:border-electric/30"
-      style={{ '--i': index } as React.CSSProperties}
-    >
-      <span
-        aria-hidden
-        className="block h-px w-10 bg-gradient-to-r from-electric to-violet transition-[width] duration-500 group-hover:w-20"
-      />
-      <p className="mt-4 text-xs tracking-wider text-electric uppercase">{label}</p>
-      <h3 className="mt-2 text-lg font-semibold tracking-tight">{title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-slate-400">{body}</p>
-      <a
-        href="#projects"
-        className={`mt-4 inline-block rounded text-xs text-slate-500 transition-colors hover:text-electric ${focusRing}`}
-      >
-        See {projectName(project)} →
-      </a>
-    </li>
   )
 }

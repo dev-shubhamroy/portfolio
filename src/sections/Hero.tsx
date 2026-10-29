@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { ArrowRight, Download, Mail } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '../components/BrandIcons'
 import FloatingLabels from '../components/FloatingLabels'
@@ -28,11 +29,19 @@ export default function Hero() {
           </p>
 
           <h1
-            className="reveal mt-7 text-[2.6rem] leading-[1.05] font-bold tracking-tight sm:text-6xl xl:text-7xl"
-            style={{ '--i': 1 } as React.CSSProperties}
+            className="mt-7 text-[2.6rem] leading-[1.05] font-bold tracking-tight sm:text-6xl xl:text-7xl"
           >
-            Building Software for a{' '}
-            <span className="bg-gradient-to-r from-electric via-violet to-cyan-glow bg-clip-text text-transparent">
+            {['Building', 'Software', 'for', 'a'].map((w, i) => (
+              <Fragment key={w}>
+                <span className="word" style={{ '--w': i } as React.CSSProperties}>
+                  {w}
+                </span>{' '}
+              </Fragment>
+            ))}
+            <span
+              className="word-soft shimmer bg-gradient-to-r from-electric via-violet to-cyan-glow bg-clip-text text-transparent"
+              style={{ '--w': 4 } as React.CSSProperties}
+            >
               Better Tomorrow.
             </span>
           </h1>
@@ -100,7 +109,9 @@ export default function Hero() {
         style={{ '--i': 6 } as React.CSSProperties}
       >
         Scroll
-        <span className="scroll-nudge block h-8 w-px bg-gradient-to-b from-electric to-transparent" />
+        <span aria-hidden className="relative block h-8 w-px bg-gradient-to-b from-white/25 to-transparent">
+          <span className="scroll-dot absolute -top-0.5 -left-[1.5px] size-1 rounded-full bg-cyan-glow shadow-[0_0_8px_var(--color-cyan-glow)]" />
+        </span>
       </a>
     </section>
   )
