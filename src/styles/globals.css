@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./transformation.css";
+@import "./loader.css";
 
 @theme {
   --color-ink-950: #070912;
@@ -934,6 +935,270 @@ body {
   .universe-ring,
   .universe-pill,
   .universe-marker {
+    transition: none;
+  }
+}
+
+/* ---- Story rail: chapter markers on wide screens ---- */
+.story-stop {
+  color: rgb(148 163 184 / 0.7);
+}
+.story-dot {
+  border-color: rgb(255 255 255 / 0.14);
+  transition:
+    border-color 0.4s,
+    box-shadow 0.4s;
+}
+.story-stop[data-state='visited'] {
+  color: rgb(125 211 252);
+}
+.story-stop[data-state='visited'] .story-dot {
+  border-color: rgb(56 189 248 / 0.45);
+}
+.story-stop[data-state='active'] {
+  color: #fff;
+}
+.story-stop[data-state='active'] .story-dot {
+  border-color: rgb(56 189 248 / 0.95);
+  box-shadow:
+    0 0 16px rgb(56 189 248 / 0.55),
+    inset 0 0 8px rgb(139 92 246 / 0.4);
+}
+.story-label {
+  color: rgb(203 213 225);
+  opacity: 0;
+  transform: translate(6px, -50%);
+  transition:
+    opacity 0.25s,
+    transform 0.25s var(--ease-out);
+}
+.story-stop[data-state='active'] .story-label {
+  opacity: 1;
+  transform: translate(0, -50%);
+  color: rgb(186 230 253);
+}
+.story-stop:focus-visible .story-label {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+@media (hover: hover) {
+  .story-stop:hover .story-label {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+.story-fill {
+  box-shadow: 0 0 10px rgb(56 189 248 / 0.7);
+  transition: transform 0.15s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-fill,
+  .story-dot,
+  .story-label {
+    transition: none;
+  }
+}
+
+/* ---- Code preview: window, tabs, syntax colours, open/close ---- */
+.code-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.45s var(--ease-out),
+    opacity 0.3s;
+}
+.code-reveal[data-open='true'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.code-reveal-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+/* the card whose code is open keeps a steady accent border */
+.project-card[data-code-open='true'] {
+  border-color: rgb(var(--accent) / 0.55);
+}
+
+.code-tab {
+  color: rgb(148 163 184);
+  border-color: transparent;
+  background: transparent;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+.code-tab:hover {
+  color: rgb(226 232 240);
+}
+.code-tab[aria-selected='true'] {
+  color: rgb(var(--accent));
+  border-color: rgb(255 255 255 / 0.1);
+  background: rgb(7 9 18 / 0.8);
+}
+
+.code-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(71 85 105) transparent;
+}
+
+.code-line {
+  display: block;
+  padding-right: 1.25rem;
+}
+.code-line::before {
+  content: attr(data-ln);
+  display: inline-block;
+  width: 3.2rem;
+  padding-right: 1rem;
+  text-align: right;
+  color: rgb(100 116 139 / 0.7);
+  user-select: none;
+}
+.code-line:hover {
+  background: rgb(255 255 255 / 0.025);
+}
+.tok-kw {
+  color: #c4b5fd;
+}
+.tok-str {
+  color: #7dd3fc;
+}
+.tok-com {
+  color: rgb(100 116 139);
+  font-style: italic;
+}
+.tok-num {
+  color: #67e8f9;
+}
+.tok-fn {
+  color: #93c5fd;
+}
+.tok-ty {
+  color: #a5b4fc;
+}
+.tok-plain {
+  color: rgb(203 213 225);
+}
+
+@keyframes code-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.code-in {
+  animation: code-in 0.25s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code-reveal,
+  .code-tab {
+    transition: none;
+  }
+  .code-in {
+    animation: none;
+  }
+}
+
+/* ---- Skills constellation ---- */
+.constellation-node {
+  width: max(var(--size), 44px);
+  height: max(var(--size), 44px);
+  transition: opacity 0.3s;
+}
+.constellation-core {
+  width: calc(var(--size) * 0.62);
+  height: calc(var(--size) * 0.62);
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--tone) / 0.7);
+  background: radial-gradient(circle at 35% 30%, rgb(var(--tone) / 0.55), rgb(var(--tone) / 0.12));
+  box-shadow: 0 0 12px rgb(var(--tone) / 0.25);
+  transition:
+    transform 0.3s var(--ease-out),
+    box-shadow 0.3s;
+}
+.constellation-node:focus-visible .constellation-core,
+.constellation-node[data-selected='true'] .constellation-core {
+  transform: scale(1.25);
+  box-shadow:
+    0 0 22px rgb(var(--tone) / 0.7),
+    0 0 0 4px rgb(var(--tone) / 0.12);
+}
+@media (hover: hover) {
+  .constellation-node:hover .constellation-core {
+    transform: scale(1.25);
+    box-shadow:
+      0 0 22px rgb(var(--tone) / 0.7),
+      0 0 0 4px rgb(var(--tone) / 0.12);
+  }
+}
+.constellation-node[data-selected='true'] .constellation-core {
+  animation: node-pulse 3.2s ease-in-out infinite;
+}
+.constellation-node[data-dim='true'],
+.constellation-hub[data-dim='true'] {
+  opacity: 0.35;
+}
+
+.constellation-hub {
+  width: 44px;
+  height: 44px;
+  transition: opacity 0.3s;
+}
+.constellation-hub-ring {
+  position: absolute;
+  inset: 8px;
+  border-radius: 9999px;
+  border: 1px dashed rgb(255 255 255 / 0.35);
+}
+.constellation-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.65rem;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 6px rgb(7 9 18);
+}
+
+.constellation-label--end {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.skill-chip {
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    color 0.2s;
+}
+.skill-chip[aria-pressed='true'],
+.skill-chip:hover {
+  border-color: rgb(var(--tone) / 0.7);
+  background: rgb(var(--tone) / 0.1);
+  color: #fff;
+}
+
+.constellation-edge {
+  transition:
+    stroke-opacity 0.3s,
+    stroke 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .constellation-node[data-selected='true'] .constellation-core {
+    animation: none;
+  }
+  .constellation-core,
+  .constellation-node,
+  .constellation-hub,
+  .constellation-edge,
+  .skill-chip {
     transition: none;
   }
 }

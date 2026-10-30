@@ -3,13 +3,12 @@ import { useRef, useState } from 'react'
 import { projects, type VisualKind } from '../../data/projects'
 import FloatingLabels from '../FloatingLabels'
 import Globe from '../globe/Globe'
+import { accents } from '../projects/theme'
 
 // Same accent per project as the Projects section cards.
-const accent: Record<VisualKind, string> = {
-  retail: '56 189 248',
-  branch: '34 211 238',
-  shortener: '167 139 250',
-}
+const accent = Object.fromEntries(
+  Object.entries(accents).map(([kind, a]) => [kind, a.accent]),
+) as Record<VisualKind, string>
 
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-electric'

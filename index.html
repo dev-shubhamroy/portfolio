@@ -13,6 +13,22 @@
     <meta name="twitter:title" content="Shubham Roy | Portfolio" />
     <meta name="twitter:description" content="Portfolio of Shubham Roy, a Mechanical Engineering student at Delhi Technological University seeking software engineering roles." />
     <title>Shubham Roy | Portfolio</title>
+    <script>
+      // Decide before first paint whether to show the intro: first visit only,
+      // never for reduced motion or deep links. A hard timeout always clears it.
+      try {
+        var d = document.documentElement
+        var seen = false
+        try { seen = localStorage.getItem('sr-intro-seen') === '1' } catch (e) {}
+        var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (!seen && !calm && !location.hash) {
+          d.setAttribute('data-intro', 'active')
+          setTimeout(function () {
+            if (d.getAttribute('data-intro') === 'active') d.setAttribute('data-intro', 'done')
+          }, 4500)
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

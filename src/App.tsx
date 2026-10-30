@@ -2,6 +2,8 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import PageAtmosphere from './components/PageAtmosphere'
 import SectionDivider from './components/SectionDivider'
+import SignatureLoader from './components/SignatureLoader'
+import StoryRail from './components/StoryRail'
 import About from './sections/About'
 import Contact from './sections/Contact'
 import Hero from './sections/Hero'
@@ -16,8 +18,10 @@ export default function App() {
       >
         Skip to content
       </a>
+      <SignatureLoader />
       <PageAtmosphere />
       <Navbar />
+      <StoryRail />
       <main id="main" className="relative z-10 overflow-x-clip">
         <Hero />
         <SectionDivider />

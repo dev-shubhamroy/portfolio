@@ -1,8 +1,9 @@
 import { Mail } from 'lucide-react'
 import { GithubIcon, LinkedinIcon } from '../components/BrandIcons'
 import SectionLabel from '../components/SectionLabel'
+import SkillsConstellation from '../components/about/SkillsConstellation'
 import TransitionDiagram from '../components/about/TransitionDiagram'
-import { aboutIntro, focusSentence, highlights, portfolioStack, projectSkills } from '../data/about'
+import { aboutIntro, focusSentence, highlights } from '../data/about'
 import { profile } from '../data/profile'
 import { projects } from '../data/projects'
 import { useReveal } from '../hooks/useReveal'
@@ -18,42 +19,10 @@ const contactLinks = [
   { label: 'Email', href: `mailto:${profile.links.email}`, icon: <Mail size={16} /> },
 ]
 
-function Pill({ children, dashed }: { children: string; dashed?: boolean }) {
-  return (
-    <li
-      className={`rounded-full px-3 py-1 text-xs ${
-        dashed
-          ? 'border border-dashed border-violet/40 text-violet-200/90'
-          : 'border border-white/10 bg-white/[0.04] text-slate-300'
-      }`}
-    >
-      {children}
-    </li>
-  )
-}
-
-function Row({ label, children, dashed }: { label: string; children: string[]; dashed?: boolean }) {
-  return (
-    <div className="grid gap-3 py-5 sm:grid-cols-[11rem_1fr] sm:items-baseline">
-      <dt className="font-mono text-xs tracking-wider text-slate-400 uppercase">{label}</dt>
-      <dd>
-        <ul className="flex flex-wrap gap-2">
-          {children.map((item) => (
-            <Pill key={item} dashed={dashed}>
-              {item}
-            </Pill>
-          ))}
-        </ul>
-      </dd>
-    </div>
-  )
-}
-
 export default function About() {
   const intro = useReveal<HTMLDivElement>()
   const diagram = useReveal<HTMLDivElement>()
   const ledger = useReveal<HTMLUListElement>()
-  const skills = useReveal<HTMLDivElement>()
 
   return (
     <section id="about" aria-labelledby="about-title" className="relative px-5 py-24 lg:py-32">
@@ -152,29 +121,7 @@ export default function About() {
           ))}
         </ul>
 
-        {/* toolkit as a spec sheet */}
-        <div
-          ref={skills}
-          className="reveal-on-scroll mt-20 overflow-hidden rounded-3xl border border-white/10 bg-ink-900/40 px-6 py-3 backdrop-blur-sm sm:px-8"
-        >
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 py-5">
-            <h3 className="text-xl font-semibold tracking-tight">Technical toolkit</h3>
-            <p className="text-sm text-slate-500">
-              Used in the featured projects below, plus this portfolio's own stack.
-            </p>
-          </div>
-          <dl className="divide-y divide-white/10">
-            {projectSkills.map((g) => (
-              <Row key={g.name} label={g.name}>
-                {g.items}
-              </Row>
-            ))}
-            <Row label="This portfolio">{portfolioStack}</Row>
-            <Row label="Growing into" dashed>
-              {profile.interests}
-            </Row>
-          </dl>
-        </div>
+        <SkillsConstellation />
       </div>
     </section>
   )

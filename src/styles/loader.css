@@ -1,0 +1,121 @@
+/* =========================================================================
+   Signature intro (first visit only). Timeline, in seconds:
+     0.00  monogram fades in
+     0.35  orbit ring draws (1.0s)
+     0.90  a light travels the orbit once (1.3s)
+     1.20  monogram gives way to the Earth silhouette (0.7s)
+     2.30  intro fades out as the page takes over (see SignatureLoader.tsx)
+   While it is active the hero's own entrance is held, so it plays on reveal.
+   ========================================================================= */
+
+.intro {
+  transition: opacity 0.55s ease;
+}
+.intro[data-leaving='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+.intro-glow {
+  background:
+    radial-gradient(ellipse 50% 45% at 50% 50%, rgb(99 102 241 / 0.22), transparent 70%),
+    radial-gradient(ellipse 30% 30% at 62% 40%, rgb(56 189 248 / 0.12), transparent 70%);
+}
+
+@keyframes intro-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes intro-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes intro-spin {
+  from {
+    transform: rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  to {
+    transform: rotate(360deg);
+    opacity: 0;
+  }
+}
+@keyframes intro-globe-in {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes intro-mono-out {
+  to {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+}
+@keyframes intro-leave {
+  to {
+    transform: scale(1.12);
+  }
+}
+
+.intro-monogram,
+.intro-globe,
+.intro-orbit {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+}
+.intro-monogram {
+  animation:
+    intro-fade 0.35s ease-out both,
+    intro-mono-out 0.6s ease-in 1.25s forwards;
+}
+.intro-ring {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transform: rotate(-90deg);
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  animation: intro-draw 1s cubic-bezier(0.45, 0, 0.25, 1) 0.35s forwards;
+}
+.intro-orbit {
+  opacity: 0;
+  animation: intro-spin 1.3s cubic-bezier(0.45, 0, 0.25, 1) 0.9s forwards;
+}
+.intro-globe {
+  opacity: 0;
+  animation: intro-globe-in 0.7s ease-out 1.2s forwards;
+}
+.intro-skip {
+  /* hidden until its delay, then fades in (the `from` keyframe is opacity 0) */
+  animation: intro-fade 0.4s ease-out 0.5s both;
+}
+.intro[data-leaving='true'] .intro-mark {
+  animation: intro-leave 0.55s ease-in forwards;
+}
+
+/* Hold the hero's entrance until the intro has left, so it plays in view. */
+html[data-intro='active'] :is(.word, .word-soft, .reveal, .fade-in) {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro,
+  .intro * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,10 +1,11 @@
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, CodeXml } from 'lucide-react'
 import type { ComponentType } from 'react'
 import type { Project, VisualKind } from '../../data/projects'
 import { useCardEffects } from '../../hooks/useCardEffects'
 import { useReveal } from '../../hooks/useReveal'
 import { cn } from '../../utils/cn'
 import { GithubIcon } from '../BrandIcons'
+import { accents } from './theme'
 import BranchVisual from './visuals/BranchVisual'
 import RetailVisual from './visuals/RetailVisual'
 import ShortenerVisual from './visuals/ShortenerVisual'
@@ -17,31 +18,30 @@ const visuals: Record<VisualKind, ComponentType> = {
 
 // Presentation only: each project gets its own accent pair, and a small mono
 // description of its architecture illustration for screen readers.
-const themes: Record<VisualKind, { accent: string; accent2: string; alt: string }> = {
-  retail: {
-    accent: '56 189 248',
-    accent2: '139 92 246',
-    alt: 'Schematic of three separate flows: recommendations (request, LLM criteria, backend filtering and ranking, products), policy Q&A (question, embedding, pgvector search, cited answer), and stock changes (staff proposal, manager approval, transaction with audit log).',
-  },
-  branch: { accent: '34 211 238',
-    accent2: '56 189 248',     alt: 'Schematic of a repository with one worktree per branch, and a supervisor that holds a lock and moves a job through starting, running, then succeeded, failed or stopped.',
-  },
-  shortener: { accent: '167 139 250',
-    accent2: '56 189 248',     alt: 'Sequence diagram: client requests a short code, Express checks Redis, on a miss queries PostgreSQL and caches the result for one hour, then redirects; a cache hit skips PostgreSQL.',
-  },
+const alts: Record<VisualKind, string> = {
+  retail:
+    'Schematic of three separate flows: recommendations (request, LLM criteria, backend filtering and ranking, products), policy Q&A (question, embedding, pgvector search, cited answer), and stock changes (staff proposal, manager approval, transaction with audit log).',
+  branch:
+    'Schematic of a repository with one worktree per branch, and a supervisor that holds a lock and moves a job through starting, running, then succeeded, failed or stopped.',
+  shortener:
+    'Sequence diagram: client requests a short code, Express checks Redis, on a miss queries PostgreSQL and caches the result for one hour, then redirects; a cache hit skips PostgreSQL.',
 }
 
 interface Props {
   project: Project
   index: number
   total: number
+  codeOpen: boolean
+  onToggleCode: () => void
+  /** warms the lazy code window before the first click */
+  onPrefetchCode: () => void
 }
 
-export default function ProjectCard({ project, index, total }: Props) {
+export default function ProjectCard({ project, index, total, codeOpen, onToggleCode, onPrefetchCode }: Props) {
   const reveal = useReveal<HTMLLIElement>()
   const card = useCardEffects<HTMLElement>()
   const Visual = visuals[project.visual]
-  const theme = themes[project.visual]
+  const theme = { ...accents[project.visual], alt: alts[project.visual] }
   const titleId = `${project.id}-title`
 
   return (
@@ -54,6 +54,7 @@ export default function ProjectCard({ project, index, total }: Props) {
       <article
         ref={card}
         aria-labelledby={titleId}
+        data-code-open={codeOpen}
         style={{ '--accent': theme.accent, '--accent-2': theme.accent2 } as React.CSSProperties}
         className={cn(
           'project-card group relative h-full overflow-hidden rounded-3xl border border-white/10 bg-ink-900/40 p-6 backdrop-blur-sm sm:p-8',
@@ -113,7 +114,7 @@ export default function ProjectCard({ project, index, total }: Props) {
 
           {project.note && <p className="mt-5 text-xs leading-relaxed text-slate-500">{project.note}</p>}
 
-          <div className="mt-auto pt-6">
+          <div className="mt-auto flex flex-wrap gap-3 pt-6">
             <a
               href={project.repoUrl}
               target="_blank"
@@ -125,6 +126,19 @@ export default function ProjectCard({ project, index, total }: Props) {
               View on GitHub
               <ArrowUpRight size={15} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
+            <button
+              id={`${project.id}-code-toggle`}
+              type="button"
+              aria-expanded={codeOpen}
+              aria-controls="project-code"
+              onClick={onToggleCode}
+              onPointerEnter={onPrefetchCode}
+              onFocus={onPrefetchCode}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[rgb(var(--accent)/0.4)] bg-[rgb(var(--accent)/0.07)] px-5 py-2.5 text-sm font-semibold text-[rgb(var(--accent))] transition-colors hover:bg-[rgb(var(--accent)/0.14)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-electric"
+            >
+              <CodeXml size={16} aria-hidden />
+              {codeOpen ? 'Hide code' : 'Explore code'}
+            </button>
           </div>
         </div>
 

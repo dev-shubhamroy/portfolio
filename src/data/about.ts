@@ -37,20 +37,3 @@ export const highlights: Highlight[] = [
     project: 'retailpulse-ai',
   },
 ]
-
-export interface SkillGroup {
-  name: string
-  items: string[]
-}
-
-/** Technologies actually used in the three featured projects. */
-export const projectSkills: SkillGroup[] = [
-  { name: 'Frontend', items: ['React', 'Vite', 'Tailwind CSS'] },
-  { name: 'Backend', items: ['Node.js', 'Express', 'Zod'] },
-  { name: 'Data and caching', items: ['PostgreSQL', 'pgvector', 'Redis'] },
-  { name: 'Systems', items: ['Rust', 'Clap', 'Serde', 'Git worktrees'] },
-  { name: 'AI tooling', items: ['Ollama'] },
-]
-
-/** Used to build this portfolio (see package.json). */
-export const portfolioStack = ['TypeScript', 'React', 'Vite', 'Tailwind CSS', 'Three.js', 'React Three Fiber']
